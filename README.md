@@ -6,7 +6,7 @@
   - [Usage](#usage)
 
 ## Introduction
-The "location_match_finder" utility searches for a location that matches a given request. Location search is carried out in accordance with the [location block selection algorithm](https://nginx.org).
+The "location_match_finder" utility searches for a location that matches a given request including sublocation levels. Location search is carried out in accordance with the [location block selection algorithm](https://nginx.org).
 
 Testing was carried out on Nginx version 1.18.0
 
