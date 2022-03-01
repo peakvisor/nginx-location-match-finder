@@ -17,6 +17,8 @@ Testing was carried out on Nginx version 1.18.0
   - Test suites:
     - [nginx-config-example.conf](tests/nginx-config-example.conf) - An example of the Nginx configuration file format
     - [uri.list](tests/uri.list) - List of URIs for script testing
+  - Location matching algorithm:
+    - [location_selection_algorithm[EN].jpg](location_matching_algorithm/location_selection_algorithm[EN].jpg) - 
 
 ## Requirements
 To successfully run the "location_match_finder" utility, you must pass the required parameters:
