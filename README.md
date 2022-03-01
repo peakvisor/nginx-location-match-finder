@@ -6,7 +6,7 @@
   - [Usage](#usage)
 
 ## Introduction
-The "location_match_finder" utility searches for a location that matches a given request including sublocation levels. Location search is carried out in accordance with the [location block selection algorithm](location_matching_algorithm/location_selection_algorithm[EN].jpg).
+The "location_match_finder" utility searches for a location that matches a given request including sublocation levels. Location search is carried out in accordance with the [location block selection algorithm](algorithms/location_selection_algorithm[EN].jpg).
 
 Testing was carried out on Nginx version 1.18.0
 
@@ -17,8 +17,8 @@ Testing was carried out on Nginx version 1.18.0
   - Test suites:
     - [nginx-config-example.conf](tests/nginx-config-example.conf) - An example of the Nginx configuration file format
     - [uri.list](tests/uri.list) - List of URIs for script testing
-  - Location matching algorithm:
-    - [location_selection_algorithm[EN].jpg](location_matching_algorithm/location_selection_algorithm[EN].jpg) - 
+  - Algorithm:
+    - [location_selection_algorithm[LANG].jpg](algorithms/) - Block schemes of the location match searching algorithm in different languages
 
 ## Requirements
 To successfully run the "location_match_finder" utility, you must pass the required parameters:
