@@ -46,5 +46,5 @@ Level 1: /batch
 ```
 And a message indicating the final location where the request will be processed
 ```bash
-Request [ /batchBoomer.xml ] will be processed by Level 3 location [ ~ .xml$ ]
+Request [ /batchBoomer.xml ] will be processed by level 3 location [ ~ .xml$ ]
 ```
