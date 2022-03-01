@@ -12,6 +12,11 @@ Testing was carried out on Nginx version 1.18.0
 
 
 ## Included content
+  - Source code:
+    - [location_match_finder.py](location_match_finder.py) - Script source code
+  - Test suites:
+    - [nginx-config-example.conf](tests/nginx-config-example.conf) - An example of the Nginx configuration file format
+    - [uri.list](tests/uri.list) - List of URIs for script testing
 
 ## Requirements
 To successfully parse the Nginx configuration file, all [location](http://nginx.org/en/docs/http/ngx_http_core_module.html#location) directives must be converted to the following format:
