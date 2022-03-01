@@ -17,7 +17,7 @@ Testing was carried out on Nginx version 1.18.0
   - Test suites:
     - [nginx-config-example.conf](tests/nginx-config-example.conf) - An example of the Nginx configuration file format
     - [uri.list](tests/uri.list) - List of URIs for script testing
-  - Algorithm:
+  - Algorithms:
     - [location_selection_algorithm[LANG].jpg](algorithms/) - Block schemes of the location match searching algorithm in different languages
 
 ## Requirements
