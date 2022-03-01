@@ -202,7 +202,7 @@ def show_output(uri, prefix_route, regexp_route):
             except BaseException:
                 pass
         print()
-        print('Request [ {} ] will be processed by Level {} location [ {} {} ]'.format(uri, route[-1]['lvl'],
+        print('Request [ {} ] will be processed by level {} location [ {} {} ]'.format(uri, route[-1]['lvl'],
                                                                                        route[-1]['modifier'],
                                                                               route[-1]['location_match']))
     else:
