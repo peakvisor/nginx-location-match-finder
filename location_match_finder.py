@@ -10,13 +10,13 @@ def argument_validation():
     if len(sys.argv) == 1:
         help_message()
     for argument in sys.argv[1:]:
-        if 'config-file=' in argument:
+        if '--config-file=' in argument:
             try:
                 config_file = open(argument.partition('=')[2], 'r')
             except Exception as exc:
                 print(exc, '\n')
                 help_message()
-        elif 'uri=' in argument:
+        elif '--uri=' in argument:
             uri = argument.partition('=')[2]
         else:
             help_message()
@@ -30,7 +30,7 @@ def help_message():
         'Please specify the required options:\n'
         '  --config-file=PATH	Path to Nginx configuration file containing locations\n'
         '  --uri=URI		Request URI in normalized form\n\n'
-        'example: \'./location_finder.py config-file=/etc/nginx/sites-available/default uri=/index.html\''
+        'example: \'./location_finder.py --config-file=/etc/nginx/sites-available/default --uri=/index.html\''
     )
     quit()
 
