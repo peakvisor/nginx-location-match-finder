@@ -1,6 +1,5 @@
 #!/usr/bin/python3.6
 
-import os
 import re
 import sys
 
@@ -116,10 +115,12 @@ def find_longest_prefix_location(locations_list, uri):
                 return current_prefix_location
         # Finding the longest prefix
         elif modifier == None or modifier == '^~':
-            current_prefix = os.path.commonprefix([uri, location_match])
-            if current_prefix > prev_found_prefix:
-                prev_found_prefix = current_prefix
-                current_prefix_location = element
+            current_prefix = re.match(location_match, uri)
+            if current_prefix != None:
+                current_prefix = current_prefix.group(0)
+                if current_prefix > prev_found_prefix:
+                    prev_found_prefix = current_prefix
+                    current_prefix_location = element
     return current_prefix_location
 
 
