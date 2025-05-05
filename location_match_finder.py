@@ -1,24 +1,46 @@
 #!/usr/bin/python3
 
 import re
-import sys
+import sys as system
+
+# Constants for argument parsing and location levels
+CONFIG_FILE_ARG_PREFIX = '--config-file='
+URI_ARG_PREFIX = '--uri='
+FIRST_LEVEL = 1
+SECOND_LEVEL = 2
+THIRD_LEVEL = 3
 
 
 # Argument validation
-def argument_validation():
-    if len(sys.argv) == 1:
+def argument_validation():    
+    # Check if any arguments are passed. If not, display help message and exit.
+    if len(system.argv) == 1:
         help_message()
-    for argument in sys.argv[1:]:
-        if '--config-file=' in argument:
+    
+    config_file = None
+    uri = None
+    
+    # Iterate through the arguments passed to the script.
+    for argument in sys.argv[1:]:        
+        if CONFIG_FILE_ARG_PREFIX in argument:
+            config_file_path = argument.partition('=')[2]            
+            
+            # Attempt to open the config file in read mode.
             try:
-                config_file = open(argument.partition('=')[2], 'r')
+                config_file = open(config_file_path, 'r')
             except Exception as exc:
                 print(exc, '\n')
                 help_message()
-        elif '--uri=' in argument:
+                
+        elif URI_ARG_PREFIX in argument:
+
+            # Extract the uri from the argument.
             uri = argument.partition('=')[2]
+            
         else:
+            # If an unrecognized option is provided, display help and exit.
             help_message()
+            
     return uri, config_file
 
 
@@ -36,37 +58,34 @@ def help_message():
 
 # This function creates a table containing an indexed hierarchical structure of locations
 def get_locations_table(config_file):
-    # Create a hierarchical list of locations (HLL)
-    HLL = []
-
-    lvl_1_index = 0
+    hierarchical_locations = []
+    first_level_index = 0
+    
     for line in config_file:
         # Search for first level locations
         if re.search('^\s{4}location', line) or re.search('^\tlocation', line):
-            res = location_directive_parser(line)
-            HLL.append({'index': lvl_1_index, 'lvl': 1, 'modifier': res[0], 'location_match': res[1],
+            directive = location_directive_parser(line)
+            hierarchical_locations.append({'index': first_level_index, 'lvl': FIRST_LEVEL, 'modifier': directive[0], 'location_match': directive[1],
                         'sub_location': []})
-            lvl_1_index += 1
-            lvl_2_index = 0
+            first_level_index += 1
+            second_level_index = 0
 
         # Search for second level locations
         if re.search('^\s{8}location', line) or re.search('^\t{2}location', line):
-            res = location_directive_parser(line)
-            HLL[(lvl_1_index - 1)]['sub_location'].append({'index': lvl_2_index, 'lvl': 2, 'modifier': res[0],
-                                                           'location_match': res[1], 'sub_location': []})
-            lvl_2_index += 1
-            lvl_3_index = 0
+            directive = location_directive_parser(line)
+            hierarchical_locations[(first_level_index - 1)]['sub_location'].append({'index': second_level_index, 'lvl': SECOND_LEVEL, 'modifier': directive[0],
+                                                                                       'location_match': directive[1], 'sub_location': []})
+            second_level_index += 1
+            third_level_index = 0
 
         # Search for third-level locations
         if re.search('^\s{12}location', line) or re.search('^\t{3}location', line):
-            res = location_directive_parser(line)
-            HLL[(lvl_1_index - 1)]['sub_location'][(lvl_2_index - 1)]['sub_location'].append({'index': lvl_3_index,
-                                                                                              'lvl': 3,
-                                                                                              'modifier': res[0],
-                                                                                              'location_match': res[1],
-                                                                                              'sub_location': []})
-            lvl_3_index += 1
-    return HLL
+            directive = location_directive_parser(line)
+            hierarchical_locations[(first_level_index - 1)]['sub_location'][(second_level_index - 1)]['sub_location'].append({'index': third_level_index,
+                                                                                              'lvl': THIRD_LEVEL, 'modifier': directive[0],
+                                                                                              'location_match': directive[1], 'sub_location': []})
+            third_level_index += 1
+    return hierarchical_locations
 
 
 # Return "modifier" and location match string specified in the Location directive.
@@ -82,17 +101,17 @@ def location_directive_parser(line):
 
 # Finding a location with a descent to deeper levels
 def find_deepest_level_location(locations, uri, matching_method):
-    current_route = []
-    for lvl in range(3):
-        if lvl == 0:
+    traversed_route = []
+    for level in range(3):
+        if level == 0:
             # Finding location on the 1st level
-            current_location = matching_method(locations, uri)
+            current_location = matching_method(locations, uri)        
         else:
             # Finding location on sub location levels
             current_location = matching_method(current_location['sub_location'], uri)
+            
         if current_location:
-            # Saves the path that was laid as a result of the search
-            current_route.append(current_location)
+            traversed_route.append(current_location)
             if current_location['sub_location']:
                 continue
             else:
@@ -104,6 +123,7 @@ def find_deepest_level_location(locations, uri, matching_method):
 # Finding an exact match or longest prefix location in a specific level list
 def find_longest_prefix_location(locations_list, uri):
     current_prefix_location = None
+    # Initialize an empty string to track the previously found prefix
     prev_found_prefix = ''
     for element in locations_list:
         modifier = element.get('modifier')
@@ -115,6 +135,7 @@ def find_longest_prefix_location(locations_list, uri):
                 return current_prefix_location
         # Finding the longest prefix
         elif modifier == None or modifier == '^~':
+            # Find a match for the longest prefix of the location
             current_prefix = re.match(location_match, uri)
             if current_prefix != None:
                 current_prefix = current_prefix.group(0)
@@ -126,51 +147,52 @@ def find_longest_prefix_location(locations_list, uri):
 
 # This function climbs up the path taken as a result of the prefix location search.
 def find_regexp_location(locations_list, uri, paved_route):
-    if paved_route:
-        lvl_count = len(paved_route)
-    else:
+    if not paved_route:
         return
-    if lvl_count == 3:
+    
+    route_level_count = len(paved_route)
+    
+    if route_level_count == THIRD_LEVEL:
         # Case with 3-level paved route
-        lvl_1_index = paved_route[0]['index']
-        lvl_2_index = paved_route[1]['index']
-        lvl_3_index = paved_route[2]['index']
+        first_level_index = paved_route[0]['index']
+        second_level_index = paved_route[1]['index']
+        third_level_index = paved_route[2]['index']
         # Forming lists of sub locations of the 1st and 2nd levels
-        lvl_1_sublocations_list = locations_list[lvl_1_index]['sub_location']
-        lvl_2_sublocations_list = locations_list[lvl_1_index]['sub_location'][lvl_2_index]['sub_location']
+        first_level_sublocations_list = locations_list[first_level_index]['sub_location']
+        second_level_sublocations_list = locations_list[first_level_index]['sub_location'][second_level_index]['sub_location']
 
-        if lvl_2_sublocations_list[lvl_3_index]['modifier'] != "^~":
+        if second_level_sublocations_list[third_level_index]['modifier'] != "^~":
             # Search for the deepest location of the regular expression among the 3rd level locations of the paved route
-            found_regexp_location = find_deepest_level_location(lvl_2_sublocations_list, uri, search_regexp_match)
+            found_regexp_location = find_deepest_level_location(second_level_sublocations_list, uri, search_regexp_match)
             if found_regexp_location:
                 return found_regexp_location
-            if lvl_1_sublocations_list[lvl_2_index]['modifier'] != "^~":
+            if first_level_sublocations_list[second_level_index]['modifier'] != "^~":
                 # Search for the deepest location of the regular expression among the 2rd level locations of the paved route
-                found_regexp_location = find_deepest_level_location(lvl_1_sublocations_list, uri, search_regexp_match)
+                found_regexp_location = find_deepest_level_location(first_level_sublocations_list, uri, search_regexp_match)
                 if found_regexp_location:
                     return found_regexp_location
 
-    elif lvl_count == 2:
+    elif route_level_count == SECOND_LEVEL:
         # Case with 2-level paved route
-        lvl_1_index = paved_route[0]['index']
-        lvl_2_index = paved_route[1]['index']
+        first_level_index = paved_route[0]['index']
+        second_level_index = paved_route[1]['index']
         # Forming lists of sub locations of the 1st level
-        lvl_1_sublocations_list = locations_list[lvl_1_index]['sub_location']
+        first_level_sublocations_list = locations_list[first_level_index]['sub_location']
 
-        if lvl_1_sublocations_list[lvl_2_index]['modifier'] != "^~":
+        if first_level_sublocations_list[second_level_index]['modifier'] != "^~":
             # Search for the deepest location of the regular expression among the 2rd level locations of the paved route
-            found_regexp_location = find_deepest_level_location(lvl_1_sublocations_list, uri, search_regexp_match)
+            found_regexp_location = find_deepest_level_location(first_level_sublocations_list, uri, search_regexp_match)
             if found_regexp_location:
                 return found_regexp_location
 
     # Search for regular expressions at the first level
-    lvl_1_index = paved_route[0]['index']
-    if locations_list[lvl_1_index]['modifier'] != "^~":
+    first_level_index = paved_route[0]['index']
+    if locations_list[first_level_index]['modifier'] != "^~":
         # Search for the deepest location of the regular expression among the 1rd level locations of the paved route
         found_regexp_location = find_deepest_level_location(locations_list, uri, search_regexp_match)
         if found_regexp_location:
             return found_regexp_location
-
+        
 
 # Finding a regular expression match location
 def search_regexp_match(locations, uri):
@@ -183,7 +205,7 @@ def search_regexp_match(locations, uri):
         elif modifier == "~*":
             found_match = re.search(element.get('location_match'), uri, flags=re.IGNORECASE)
             if found_match:
-                return element
+                return element        
 
 
 # Formation of output information
@@ -223,11 +245,19 @@ def show_route(locations):
 
 
 def main():
-    URI, CONFIG_FILE = argument_validation()
-    HLL = get_locations_table(CONFIG_FILE)
-    PAVED_PREFIX_ROUTE = find_deepest_level_location(HLL, URI, find_longest_prefix_location)
-    PAVED_REGEXP_ROUTE = find_regexp_location(HLL, URI, PAVED_PREFIX_ROUTE)
-    show_output(URI, PAVED_PREFIX_ROUTE, PAVED_REGEXP_ROUTE)
-
+    # Step 1: Validate command-line arguments and get URI and config file
+    uri, config_file = argument_validation()
+    
+    # Step 2: Parse the config file and build the hierarchical locations table
+    hierarchical_locations_table = get_locations_table(config_file)
+    
+    # Step 3: Find the deepest level location based on prefix matching
+    prefix_match_route = find_deepest_level_location(hierarchical_locations_table, uri, find_longest_prefix_location)
+    
+    # Step 4: Find a matching location using regular expressions, based on the prefix route
+    regexp_match_route = find_regexp_location(hierarchical_locations_table, uri, prefix_match_route)
+    
+    # Step 5: Display the output, showing the traversed routes and the final matching location
+    show_output(uri, prefix_match_route, regexp_match_route)
 
 main()
